@@ -6,7 +6,6 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.distributions.categorical import Categorical
 import time
-import h5py
 
 device = T.device("cuda" if T.cuda.is_available() else "cpu")
 T.autograd.set_detect_anomaly(True)
@@ -90,9 +89,9 @@ class ActorModel(nn.Module):
                  min_tens = T.tensor((-1, 1)), max_tens = T.tensor((-1, 1))):
         super(ActorModel, self).__init__()
 
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=6, kernel_size=3, stride=2, padding=1)
-        self.conv2 = nn.Conv2d(in_channels=6, out_channels=2, kernel_size=3, stride=2, padding=1)
-        self.flat = nn.Flatten()
+        #self.conv1 = nn.Conv2d(in_channels=1, out_channels=6, kernel_size=3, stride=2, padding=1)
+        #self.conv2 = nn.Conv2d(in_channels=6, out_channels=2, kernel_size=3, stride=2, padding=1)
+        #self.flat = nn.Flatten()
 
         # base model
         self.fc1 = nn.Linear(in_features=input_shape, out_features=64).to(device)
@@ -113,9 +112,9 @@ class ActorModel(nn.Module):
     def forward(self, x):
         ''' We create a class that computes the distribution of our actions. '''
 
-        x = F.tanh(self.conv1(x))
-        x = F.tanh(self.conv2(x))
-        x = self.flat(x)
+        #x = F.tanh(self.conv1(x))
+        #x = F.tanh(self.conv2(x))
+        #x = self.flat(x)
         # base computation
         x = F.tanh(self.fc1(x).to(device))
         x = F.tanh(self.fc2(x)).to(device)
@@ -162,14 +161,14 @@ class ActorModel(nn.Module):
     def calc_c2(self):
         new_c2 = self.c2*0.95
         self.c2 = max(new_c2, 0.5)
-
+    
 class CriticModel(nn.Module):
     def __init__(self, input_shape):
         super(CriticModel, self).__init__()
 
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=6, kernel_size=3, stride=2, padding=1)
-        self.conv2 = nn.Conv2d(in_channels=6, out_channels=2, kernel_size=3, stride=2, padding=1)
-        self.flat = nn.Flatten()
+        #self.conv1 = nn.Conv2d(in_channels=1, out_channels=6, kernel_size=3, stride=2, padding=1)
+        #self.conv2 = nn.Conv2d(in_channels=6, out_channels=2, kernel_size=3, stride=2, padding=1)
+        #self.flat = nn.Flatten()
 
         self.fc1 = nn.Linear(input_shape, 64).to(device)
         self.fc2 = nn.Linear(64, 64).to(device)
@@ -179,22 +178,14 @@ class CriticModel(nn.Module):
         '''
         Overwrites the basic call function
         '''
-        x = F.tanh(self.conv1(x))
-        x = F.tanh(self.conv2(x))
-        x = self.flat(x)
+        #x = F.tanh(self.conv1(x))
+        #x = F.tanh(self.conv2(x))
+        #x = self.flat(x)
         x = F.tanh(self.fc1(x)).to(device)
         x = F.tanh(self.fc2(x)).to(device)
         x = self.output(x).to(device)
 
         return T.squeeze(x)
-    
-    def save(self, save_to_path: str):
-        save_to_path += '_critic'
-        T.save(self.target_model.state_dict(), save_to_path)
-
-    def load(self, load_to_path):
-        self.target_model.load_state_dict(T.load(load_to_path))
-        self.model.load_state_dict(T.load(load_to_path))
 
 class Agent(nn.Module):
         # An interesting note - implementations exist where actor and critic share 
@@ -419,7 +410,8 @@ class Agent(nn.Module):
 
 
         return total_pol_loss, total_critic_loss, total_loss
-    
+
+
     def save(self, save_to):
         save_to_critic = save_to + '_critic'
         T.save(self.critic.state_dict(), save_to_critic)
@@ -428,25 +420,11 @@ class Agent(nn.Module):
         T.save(self.actor.state_dict(), save_to_actor)
 
     def load(self, load_actor, load_critic):
-        # Assuming the path to your .pkl file
-        # Load the pickled state dictionary
-
-        #with open(load_actor, 'rb') as file:
-        #    state_dict = h5py.load(file)
-
-        # Assuming you have an instance of your model
-        #model = CriticModel(input_shape=100)  # Adjust `CriticModel` and `input_shape` as necessary
-
-        # Load the state dictionary into your model
-        #model.load_state_dict(state_dict)
-
-        # Optionally, put the model in evaluation mode if you're doing inference
-        #model.eval()
         self.actor.load_state_dict(T.load(load_actor))
         self.critic.load_state_dict(T.load(load_critic))
-    
         
 
 
+##A
     
     
